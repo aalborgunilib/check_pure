@@ -20,8 +20,28 @@ Install Perl dependencies for the plugin via e.g. [cpanm](https://metacpan.org/p
 
 ## Usage
 
+    Usage: check_primo
+        [ -H|--hostname=<Hostname of the Pure administrative interface> ]
+        [ -s|--ssl ]
+        [ -t|--timeout=<timeout> ]
+
+
+`-H|--hostname` is the hostname of the Pure administrative interface (probably the one you append /admin to).
+
+`-s|--ssl` is needed if you use https to connect to the administrative interface.
+
+`-t|--timeout` is the plugin timeout. If timeout is reached, the check will bail out and issue an UNKNOWN state.
+
+In case of warnings and critical issues the plugin will try to get the issue description from the surveillance status.
+
+According to the Pure wiki, the check currently includes:
+
+  * Basic read access to the database
+  * Search via the free-text search index
+  * Free disk space in the serverDataDir
+
 ## Copyright and license
 
-Copyright (c) 2015 Kasper LÃ¸vschall and Aalborg University Library
+Copyright (c) 2016 Kasper Løvschall and Aalborg University Library
 
 This software is free software; you can redistribute it and/or modify it under the same terms as Perl itself. See [Perl Licensing](http://dev.perl.org/licenses/).
