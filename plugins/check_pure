@@ -85,7 +85,7 @@ if ( $response ) {
 			message => "All is well"
 		);
 	}
-	# Not so good, then ...
+	# Not so good then ...
 	elsif ( $response =~ m{^YELLOW}i ) {
 		my $message = "Something is not good, but the system should still work";
 		$message = $1 if ( $response =~ m{ - (.*+)} );
@@ -103,7 +103,7 @@ if ( $response ) {
 			message => $message
 		);
 	}
-	# The response wass unable to parse
+	# The response was unable to parse
 	else {
 		$p->plugin_die(
 			message => "Unexpected response from server"
