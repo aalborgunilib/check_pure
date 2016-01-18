@@ -20,7 +20,7 @@ Install Perl dependencies for the plugin via e.g. [cpanm](https://metacpan.org/p
 
 ## Usage
 
-    Usage: check_primo
+    Usage: check_pure
         [ -H|--hostname=<Hostname of the Pure administrative interface> ]
         [ -s|--ssl ]
         [ -t|--timeout=<timeout> ]
