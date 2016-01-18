@@ -1,0 +1,118 @@
+#!/usr/bin/perl -w
+
+# Nagios (and compatible) plugin to check the health of Elsevier Pure CRIS
+#
+# (c) 2016 Kasper Løvschall and Aalborg University Library
+#
+# This software is free software; you can redistribute it and/or modify
+# it under the same terms as Perl itself.
+
+use strict;
+use warnings;
+
+use Benchmark qw{:hireswallclock};
+use LWP::Simple;
+use File::Basename;
+use Monitoring::Plugin;
+
+use vars qw($VERSION $PROGNAME $verbose $warn $critical $timeout $result);
+
+$PROGNAME = basename($0);
+$VERSION = "1.0.0";
+
+# Instantiate plugin object
+my $p = Monitoring::Plugin->new(
+	usage => "Usage: %s
+	[ -H|--hostname=<Hostname of the Pure administrative interface> ]
+	[ -s|--ssl ]
+	[ -t|--timeout=<timeout> ]",
+	plugin => $PROGNAME,
+	version => $VERSION,
+	timeout => 15,
+	blurb => 'Nagios (and compatibles) plugin to check the health of Elsevier Pure CRIS',
+);
+
+# Define command line options
+$p->add_arg(
+	spec => 'hostname|H=s',
+	help =>
+	qq{-H, --hostname
+	The hostname of the Pure administrative interface.},
+	required => 1,
+);
+
+$p->add_arg(
+	spec => 'ssl|s+',
+	help =>
+	qq{-s, --ssl
+	The administrative interface is availabel via HTTPS.},
+);
+
+# Parse arguments
+$p->getopts;
+
+# Enable and start counting down until timeout (this is the "mission critical" part)
+alarm $p->opts->timeout;
+
+# Time retrieval of the url
+my $proto = 'http://';
+$proto = 'https://' if $p->opts->ssl;
+my $url = $proto . $p->opts->hostname . '/admin/services/surveillance';
+my $response;
+my $exec_time = timeit( 1, sub{
+		$response = get($url);
+	} );
+
+# Disable timeout
+alarm 0;
+
+# Round the result to 3 digits
+$result = sprintf("%.3f", $exec_time->real);
+
+# Did the service respond?
+if ( $response ) {
+	# Add performance data
+	$p->add_perfdata(
+		label => "Response time",
+		value => $result,
+		uom => 's',
+	);
+
+	# The system is in good condition
+	if ( $response =~ m{^GREEN}i ) {
+		$p->plugin_exit(
+			return_code => OK,
+			message => "All is well"
+		);
+	}
+	# Not so good, then ...
+	elsif ( $response =~ m{^YELLOW}i ) {
+		my $message = "Something is not good, but the system should still work";
+		$message = $1 if ( $response =~ m{ - (.*+)} );
+		$p->plugin_exit(
+			return_code => WARNING,
+			message => $message
+		);
+	}
+	# Really critical
+	elsif ( $response =~ m{^RED}i ) {
+		my $message = "The system is probably not working";
+		$message = $1 if ( $response =~ m{ - (.*+)} );
+		$p->plugin_exit(
+			return_code => CRITICAL,
+			message => $message
+		);
+	}
+	# The response wass unable to parse
+	else {
+		$p->plugin_die(
+			message => "Unexpected response from server"
+		);
+	}
+}
+# The server is down or hostname is wrong
+else {
+	$p->plugin_die(
+		message => "Unable to contact the server"
+	);
+}
