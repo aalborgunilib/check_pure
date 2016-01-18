@@ -1,5 +1,5 @@
 # check_pure
-Nagios (and compatibles) plugin to check the health of Elsevier Pure CRIS.
+Nagios (and compatibles) plugin to check the health of Elsevier Pure CRIS (https://www.elsevier.com/solutions/pure).
 
 ## About
 This plugin will check the internal surveillance URL of Pure that will report the status of the system.
